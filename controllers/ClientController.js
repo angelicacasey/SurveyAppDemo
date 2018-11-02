@@ -9,7 +9,17 @@ AWS.config.update({
 var docClient = new AWS.DynamoDB.DocumentClient();
 var table = "SurveyData";
 
+function getUniqueId() {
+	return new Date().valueOf().toString(36) + Math.random().toString(36).substr(2);
+}
+
+function getCurrentTimestamp() {
+	var d = new Date();
+	return d.toISOString();
+}
+
 exports.getAllClients = function(req, res) {
+	console.log("current timestamp: ", getCurrentTimestamp());
 	var params = {
 		TableName: table,
 		IndexName: "Type-AssocId-Index",
@@ -30,14 +40,11 @@ exports.getAllClients = function(req, res) {
 	});
 };
 
-function getUniqueId() {
-	return new Date().valueOf().toString(36) + Math.random().toString(36).substr(2);
-}
-
 exports.addClient = function(req, res) {
 	console.log("client to add: " + JSON.stringify(req.body));
 	var client = req.body;
 	client.id = getUniqueId();
+	client.createdDt = getCurrentTimestamp();
 	var params = {
 		TableName: table,
 		Item: client
@@ -74,6 +81,8 @@ exports.getClient = function(req, res) {
 
 exports.updateClient = function(req, res) {
 	console.log("update client" + JSON.stringify(req.body));
+	var client = req.body;
+	client.updatedDt = getCurrentTimestamp();
 	var params = {
 		TableName: table,
 		Item: req.body
@@ -96,9 +105,10 @@ exports.deleteClient = function(req, res) {
 		Key: {
 			"id": req.params.id
 		},
-		UpdateExpression: "set deactivated = :deactivated",
+		UpdateExpression: "set deactivated = :deactivated, updatedDt = :updatedDt",
 		ExpressionAttributeValues: {
-			":deactivated": true
+			":deactivated": true,
+			":updatedDt": getCurrentTimestamp()
 		}
 	};
 	docClient.update(params, (err, data) => {

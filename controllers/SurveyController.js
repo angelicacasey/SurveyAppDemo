@@ -14,6 +14,11 @@ function getUniqueId() {
 	return new Date().valueOf().toString(36) + Math.random().toString(36).substr(2);
 }
 
+function getCurrentTimestamp() {
+	var d = new Date();
+	return d.toISOString();
+}
+
 exports.getAllSurveys = function(req, res) {
 	var params = {
 		TableName: table,
@@ -40,6 +45,7 @@ exports.addSurvey = function(req, res) {
 	// need to add survey record and then save the list of questions.
 	var survey = req.body;
 	survey.id = getUniqueId();
+	survey.createdDt = getCurrentTimestamp();
 	var questions = survey.questions;
 	delete survey.questions;
 	var params = {
@@ -81,7 +87,11 @@ function saveQuestions(questions, surveyId) {
 				if (!question.hasOwnProperty("id")) {
 					question.id = getUniqueId();
 					question.surveyId = surveyId;
+					question.createdDt = getCurrentTimestamp()
+				} else {
+					question.updatedDt = getCurrentTimestamp()
 				}
+
 				request = {
 					PutRequest: {
 	           			Item: question
@@ -161,6 +171,7 @@ exports.updateSurvey = function(req, res) {
 	console.log("update Survey" + JSON.stringify(req.body));
 	// need to update survey record and then update the list of questions.
 	var survey = req.body;
+	survey.updatedDt = getCurrentTimestamp();
 	var questions = survey.questions;
 	delete survey.questions;
 	var params = {
@@ -191,9 +202,10 @@ exports.deleteSurvey = function(req, res) {
 		Key: {
 			"id": req.params.id
 		},
-		UpdateExpression: "set deactivated = :deactivated",
+		UpdateExpression: "set deactivated = :deactivated, updatedDt = :updatedDt",
 		ExpressionAttributeValues: {
-			":deactivated": true
+			":deactivated": true,
+			":updatedDt": getCurrentTimestamp()
 		}
 	};
 	docClient.update(params, (err, data) => {

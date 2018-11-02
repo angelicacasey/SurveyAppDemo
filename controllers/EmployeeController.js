@@ -13,6 +13,11 @@ function getUniqueId() {
 	return new Date().valueOf().toString(36) + Math.random().toString(36).substr(2);
 }
 
+function getCurrentTimestamp() {
+	var d = new Date();
+	return d.toISOString();
+}
+
 exports.getAllEmployees = function(req, res) {
 	var params = {
 		TableName: table,
@@ -38,6 +43,7 @@ exports.addEmployee = function(req, res) {
 	console.log("Employee to add: " + JSON.stringify(req.body));
 	var employee = req.body;
 	employee.id = getUniqueId();
+	employee.createdDt = getCurrentTimestamp();
 	var params = {
 		TableName: table,
 		Item: req.body
@@ -75,6 +81,8 @@ exports.getEmployee = function(req, res) {
 
 exports.updateEmployee = function(req, res) {
 	console.log("update Employee" + JSON.stringify(req.body));
+	var employee = req.body;
+	employee.updatedDt = getCurrentTimestamp();
 	var params = {
 		TableName: table,
 		Item: req.body
@@ -97,9 +105,10 @@ exports.deleteEmployee = function(req, res) {
 		Key: {
 			"id": req.params.id
 		},
-		UpdateExpression: "set deactivated = :deactivated",
+		UpdateExpression: "set deactivated = :deactivated, updatedDt = :updatedDt",
 		ExpressionAttributeValues: {
-			":deactivated": true
+			":deactivated": true,
+			":updatedDt": getCurrentTimestamp()
 		}
 	};
 	docClient.update(params, (err, data) => {
