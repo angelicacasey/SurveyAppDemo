@@ -44,6 +44,9 @@ exports.addProject = function(req, res) {
 	var project = req.body;
 	project.id = getUniqueId();
 	project.createdDt = getCurrentTimestamp();
+	// employee list comes in as a list of employee objects.  Just want
+	// to store the ids in the db.
+	project.employees = convertToIdList(project.employees);
 	var params = {
 		TableName: table,
 		Item: req.body
@@ -59,6 +62,14 @@ exports.addProject = function(req, res) {
 	});
 };
 
+function convertToIdList(employeeList) {
+	var idList = [];
+	employeeList.forEach(emp => {
+		idList.push(emp.id);
+	});
+	return idList;
+}
+
 exports.getProject = function(req, res) {
 	var projectId = req.params.id;
 	var params = {
@@ -73,6 +84,30 @@ exports.getProject = function(req, res) {
 		res.send(err);
 	});
 };
+
+exports.getProjectsForClient = function(req, res) {
+	var clientId = req.params.id;
+	var params = {
+		TableName: table,
+		IndexName: "Type-AssocId-Index",
+		KeyConditionExpression: "dataType = :type and associatedId = :id",
+		ExpressionAttributeValues: {
+			":type": "PROJECT",
+			":id": clientId
+		}
+	};
+	console.log("Get Projects for client " + clientId);
+	docClient.query(params, (err, data) => {
+		if (err) {
+			console.error("Unable to query. Error: ", JSON.stringify(err));
+			res.send(err);
+		} else {
+			console.log("Query succeeded. ", JSON.stringify(data));
+			res.json(data.Items);
+		}
+	});
+};
+
 
 function getData(params) {
 

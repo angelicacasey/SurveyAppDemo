@@ -19,6 +19,7 @@ function getCurrentTimestamp() {
 }
 
 exports.getAllEmployees = function(req, res) {
+	console.log("getAllEmployees");
 	var params = {
 		TableName: table,
 		IndexName: "Type-AssocId-Index",
@@ -38,6 +39,35 @@ exports.getAllEmployees = function(req, res) {
 		}
 	});
 };
+
+exports.getEmployeesByIds = function(req, res) {
+	console.log("getEmployeesByIds:");
+	//var empList = req.query.empList.split(",");
+	var empList = req.body;
+	console.log("getEmployeesByIds: ", empList);
+	var keys = [];
+	empList.forEach(function(item) {
+		keys.push({"id": item});
+	});
+	console.log("keys: ", keys);
+	var params = {
+		RequestItems: {
+			"SurveyData": {
+				Keys: keys
+			}
+		}
+	};
+	docClient.batchGet(params, (err, data) => {
+		if (err) {
+			console.error("Unable to get item. Error: ", JSON.stringify(err));
+			res.send(err);
+		} else {
+			console.log(JSON.stringify(data));
+			var results = data.Responses.SurveyData;
+			res.json(results);
+		}
+	});
+}
 
 exports.addEmployee = function(req, res) {
 	console.log("Employee to add: " + JSON.stringify(req.body));
@@ -61,6 +91,7 @@ exports.addEmployee = function(req, res) {
 
 exports.getEmployee = function(req, res) {
 	var employeeId = req.params.id;
+	console.log("getEmployee: ", employeeId);
 	var params = {
 		TableName: table,
 		Key: {

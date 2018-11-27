@@ -59,7 +59,7 @@ exports.addSurvey = function(req, res) {
 		} else {
 			console.log("Item added");
 			// save off questions (batch write)
-			saveQuestions(questions, survey.id).then((result) => {
+			saveQuestions(questions, survey).then((result) => {
 				survey.questions = result;
 				res.json(survey);
 			}, (err) => {
@@ -69,7 +69,7 @@ exports.addSurvey = function(req, res) {
 	});
 };
 
-function saveQuestions(questions, surveyId) {
+function saveQuestions(questions, survey) {
 	return new Promise ((resolve, reject) => {
 		var requestList = [];
 		questions.forEach((question) => {
@@ -86,10 +86,16 @@ function saveQuestions(questions, surveyId) {
 			} else {
 				if (!question.hasOwnProperty("id")) {
 					question.id = getUniqueId();
-					question.surveyId = surveyId;
-					question.createdDt = getCurrentTimestamp()
+					question.surveyId = survey.id;
+					question.createdDt = getCurrentTimestamp();
+					question.searchCriteria = survey.clientId + "#" + survey.projectId;
+					if (question.employeeId) {
+						question.searchCriteria = question.searchCriteria + "#" + question.employeeId;
+					}
+					console.log("new question: ", JSON.stringify(question));
 				} else {
-					question.updatedDt = getCurrentTimestamp()
+					question.updatedDt = getCurrentTimestamp();
+					console.log("updated question: ", JSON.stringify(question));
 				}
 
 				request = {

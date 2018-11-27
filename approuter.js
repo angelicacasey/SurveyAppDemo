@@ -23,6 +23,9 @@ module.exports = function (app) {
 		.put(projectController.updateProject)
 		.delete(projectController.deleteProject);
 
+	app.route('/project/byClient/:id')
+		.get(projectController.getProjectsForClient);
+
 	app.route('/employee')
 		.get(employeeController.getAllEmployees)
 		.post(employeeController.addEmployee);
@@ -31,6 +34,9 @@ module.exports = function (app) {
 		.get(employeeController.getEmployee)
 		.put(employeeController.updateEmployee)
 		.delete(employeeController.deleteEmployee);		
+
+	app.route('/employee/byIdList/')
+		.post(employeeController.getEmployeesByIds);
 
 	app.route('/survey')
 		.get(surveyController.getAllSurveys)
