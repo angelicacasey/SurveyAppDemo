@@ -47,4 +47,7 @@ module.exports = function (app) {
 		.put(surveyController.updateSurvey)
 		.delete(surveyController.deleteSurvey);		
 
+	app.route('/survey/send/:id')
+		.post(surveyController.sendSurvey);
+
 };

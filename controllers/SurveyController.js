@@ -190,7 +190,7 @@ exports.updateSurvey = function(req, res) {
 			res.send(err);
 		} else {
 			console.log("Item updated ", JSON.stringify(data))
-			saveQuestions(questions, survey.id).then((result) => {
+			saveQuestions(questions, survey).then((result) => {
 				// add questions to survey and return
 				survey.questions = result;
 				res.send(survey);
@@ -221,6 +221,32 @@ exports.deleteSurvey = function(req, res) {
 		} else {
 			console.log("Item deactivated ", JSON.stringify(data))
 			res.json(data);
+		}
+	});
+}
+
+exports.sendSurvey = function(req, res) {
+
+	console.log("send Survey");
+	var survey = req.body;
+	console.log("survey: ", JSON.stringify(survey));
+	survey.status = "Sent";
+	survey.numTimesSent = survey.numTimesSent + 1;
+	survey.lastSentDt = getCurrentTimestamp();
+	survey.updatedDt = getCurrentTimestamp();
+	delete survey.questions;
+	var params = {
+		TableName: table,
+		Item: survey
+	};
+
+	docClient.put(params, (err, data) => {
+		if (err) {
+			console.error("Unable to update item. Error: ", JSON.stringify(err));
+			res.send(err);
+		} else {
+			console.log("Item updated ", JSON.stringify(data))
+			res.send(survey);
 		}
 	});
 }
