@@ -50,4 +50,7 @@ module.exports = function (app) {
 	app.route('/survey/send/:id')
 		.post(surveyController.sendSurvey);
 
+	app.route('/survey/response')
+		.post(surveyController.saveResponse);
+
 };
